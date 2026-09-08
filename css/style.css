@@ -119,19 +119,22 @@ header.site-header .wrapper {
 nav.site-nav ul {
   list-style: none;
   display: flex;
-  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.2rem;
   margin: 0;
   padding: 0;
 }
 
 nav.site-nav a {
   font-family: var(--mono);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
   font-weight: 500;
-  padding: 0.4rem 0.75rem;
+  padding: 0.4rem 0.6rem;
   border-radius: 6px;
   border: 1px solid transparent;
+  white-space: nowrap;
 }
 
 nav.site-nav a:hover {
@@ -436,17 +439,25 @@ section h2::after {
   border-color: var(--border-hover);
 }
 
-.pub-rank {
-  font-family: var(--mono);
-  color: var(--text-dim);
-  font-size: 0.8rem;
-  margin-right: 0.5rem;
-}
-
 .pub-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
   font-weight: 600;
   color: var(--text);
   font-size: 0.98rem;
+}
+
+.pub-rank {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.pub-title-text {
+  flex: 1 1 auto;
 }
 
 .pub-authors {
@@ -638,7 +649,7 @@ section h2::after {
 /* ---------------------------------------------------------
    Responsive
 --------------------------------------------------------- */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   header.site-header .wrapper {
     flex-direction: column;
     align-items: flex-start;
@@ -646,10 +657,11 @@ section h2::after {
   }
 
   nav.site-nav ul {
-    gap: 0.3rem;
-    flex-wrap: wrap;
+    justify-content: flex-start;
   }
+}
 
+@media (max-width: 600px) {
   .contact-list li {
     flex-direction: column;
     align-items: flex-start;
