@@ -487,6 +487,12 @@ section h2::after {
   padding: 0.1rem 0.6rem;
 }
 
+.pub-desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0.6rem 0 0;
+}
+
 /* ---------------------------------------------------------
    Cards (projects)
 --------------------------------------------------------- */

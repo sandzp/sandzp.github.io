@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Space Medicine &middot; Sandip Panesar</title>
+  <meta name="description" content="Sandip Panesar's research on surgery, neurosurgery, and human physiology in spaceflight." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrapper">
+      <a class="site-title" href="index.html"><span class="prompt">&gt;</span> sandip<span class="cursor"></span></a>
+      <nav class="site-nav">
+        <ul>
+          <li><a href="index.html">home</a></li>
+          <li><a href="about.html">about</a></li>
+          <li><a href="projects.html">projects</a></li>
+          <li><a href="publications.html">publications</a></li>
+          <li><a href="contact.html">contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrapper">
+      <section class="reveal">
+        <h2>space medicine</h2>
+        <p style="color: var(--text-muted); max-width: 65ch;">
+          Pre-COVID, I became interested in this niche corner of medicine — what surgical and
+          neurosurgical care would need to look like on long-duration missions beyond Earth, where
+          evacuation isn't an option and mission planners have to think adaptively about physiology,
+          trauma, and self-sufficient care. A few publications came out of it, gathered here.
+        </p>
+      </section>
+
+      <section class="reveal">
+        <ul class="pub-list">
+          <li class="pub-item">
+            <div class="pub-title">
+              <span class="pub-title-text">Surgery in space</span>
+            </div>
+            <p class="pub-authors">Sandip S Panesar, K Ashkan</p>
+            <div class="pub-meta">
+              <span class="venue">BJS (British Journal of Surgery)</span><span>&middot;</span><span>Vol 105, Issue 10</span><span>&middot;</span><span>2018</span><span class="citations">69 citations</span>
+            </div>
+            <p class="pub-desc">
+              A literature review of the medical challenges of long-distance space travel: fluid
+              redistribution, cardiovascular deconditioning, bone and muscle atrophy, and radiation
+              exposure, alongside the trauma and common surgical conditions (e.g. appendicitis) a crew
+              could face too far from Earth for evacuation or telemedicine. Argues for self-sufficient,
+              adaptive surgical technology as the only realistic answer.
+            </p>
+            <div class="links" style="margin-top: 0.75rem;">
+              <a href="https://doi.org/10.1002/bjs.10908">abstract &amp; article &rarr;</a>
+            </div>
+          </li>
+
+          <li class="pub-item">
+            <div class="pub-title">
+              <span class="pub-title-text">Neurosurgery and Manned Spaceflight</span>
+            </div>
+            <p class="pub-authors">Sandip S Panesar, Juan C Fernandez-Miranda, Michel Kliot, Keyoumars Ashkan</p>
+            <div class="pub-meta">
+              <span class="venue">Neurosurgery</span><span>&middot;</span><span>Vol 86, Issue 3, pp 317&ndash;324</span><span>&middot;</span><span>2020</span>
+            </div>
+            <p class="pub-desc">
+              A neurosurgery-focused follow-up examining CNS and ophthalmologic effects of long-duration
+              microgravity exposure — including intracranial pressure changes associated with Spaceflight
+              Associated Neuro-ocular Syndrome (SANS) — and what that means for neurosurgical risk,
+              diagnosis, and treatment on future deep-space missions.
+            </p>
+            <div class="links" style="margin-top: 0.75rem;">
+              <a href="https://www.ovid.com/jnls/neurosurgery/abstract/10.1093/neuros/nyy531~neurosurgery-and-manned-spaceflight?redirectionsource=fulltextview">article (subscription) &rarr;</a>
+            </div>
+          </li>
+
+          <li class="pub-item">
+            <div class="pub-title">
+              <span class="pub-title-text">In Reply: Neurosurgery and Manned Spaceflight</span>
+            </div>
+            <p class="pub-authors">Sandip S Panesar, Juan C Fernandez-Miranda, Michel Kliot, Keyoumars Ashkan</p>
+            <div class="pub-meta">
+              <span class="venue">Neurosurgery</span><span>&middot;</span><span>Vol 85, Issue 1, pp E159&ndash;E160</span><span>&middot;</span><span>2019</span>
+            </div>
+            <p class="pub-desc">
+              Our reply to a letter to the editor responding to the piece above — engaging further with
+              readers' questions on the neurosurgical implications of manned spaceflight.
+            </p>
+            <div class="links" style="margin-top: 0.75rem;">
+              <a href="https://journals.lww.com/neurosurgery/fulltext/10.1093/neuros/nyz107~in-reply-neurosurgery-and-manned-spaceflight">article (subscription) &rarr;</a>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrapper">
+      <span>&copy; <span id="year"></span> sandip panesar</span>
+      <span><a href="https://github.com/sandzp">github.com/sandzp</a></span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
