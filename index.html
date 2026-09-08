@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sandip Panesar</title>
+  <meta name="description" content="Personal website of Sandip Panesar." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrapper">
+      <a class="site-title" href="index.html">Sandip Panesar</a>
+      <nav class="site-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrapper">
+      <section class="hero">
+        <h1>Hi, I'm Sandip.</h1>
+        <p class="tagline"><!-- TODO: one-line description of what you do --></p>
+        <div class="actions">
+          <a class="btn primary" href="projects.html">View my projects</a>
+          <a class="btn secondary" href="contact.html">Get in touch</a>
+        </div>
+      </section>
+
+      <section class="intro">
+        <h2>About</h2>
+        <p>
+          <!-- TODO: short 2-3 sentence intro. Who you are, what you work on,
+               what you're interested in. -->
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrapper">
+      <span>&copy; <span id="year"></span> Sandip Panesar</span>
+      <span><a href="https://github.com/sandzp">GitHub</a></span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

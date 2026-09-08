@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Projects · Sandip Panesar</title>
+  <meta name="description" content="Projects by Sandip Panesar." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrapper">
+      <a class="site-title" href="index.html">Sandip Panesar</a>
+      <nav class="site-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrapper">
+      <section>
+        <h2>Projects</h2>
+        <div class="card-grid">
+          <!-- TODO: duplicate this .card block per project -->
+          <div class="card">
+            <h3>Project name</h3>
+            <p>One or two sentences describing what it does and what you used to build it.</p>
+            <div class="links">
+              <a href="#">Code</a>
+              <a href="#">Demo</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Project name</h3>
+            <p>One or two sentences describing what it does and what you used to build it.</p>
+            <div class="links">
+              <a href="#">Code</a>
+              <a href="#">Demo</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Project name</h3>
+            <p>One or two sentences describing what it does and what you used to build it.</p>
+            <div class="links">
+              <a href="#">Code</a>
+              <a href="#">Demo</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrapper">
+      <span>&copy; <span id="year"></span> Sandip Panesar</span>
+      <span><a href="https://github.com/sandzp">GitHub</a></span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
