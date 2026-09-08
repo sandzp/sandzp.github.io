@@ -292,6 +292,127 @@ section h2::after {
 }
 
 /* ---------------------------------------------------------
+   Stat tiles (about page highlights)
+--------------------------------------------------------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.stat {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.4rem;
+  background: var(--bg-alt);
+}
+
+.stat .value {
+  font-family: var(--sans);
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.1;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.stat .label {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------
+   Timeline (career / education)
+--------------------------------------------------------- */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.85rem;
+  list-style: none;
+  border-left: 1px solid var(--border);
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.timeline-item {
+  position: relative;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: calc(-1.5rem - 4.5px);
+  top: 0.4rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--glow);
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.timeline-role {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.timeline-role .company {
+  color: var(--accent);
+}
+
+.timeline-meta {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.timeline-desc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.timeline-desc + .timeline-desc {
+  margin-top: 0.3rem;
+}
+
+/* ---------------------------------------------------------
+   Skill groups (about page)
+--------------------------------------------------------- */
+.skill-group {
+  margin-bottom: 1.1rem;
+}
+
+.skill-group:last-child {
+  margin-bottom: 0;
+}
+
+.skill-group .group-label {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+/* ---------------------------------------------------------
    Cards (projects)
 --------------------------------------------------------- */
 .card-grid {
