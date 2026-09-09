@@ -207,6 +207,7 @@ footer.site-footer a:hover {
   background: var(--accent-grad);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
@@ -318,6 +319,7 @@ section h2::after {
   background: var(--accent-grad);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
