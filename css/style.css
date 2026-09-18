@@ -608,7 +608,6 @@ section h2::after {
 
 .bio p {
   color: var(--text-muted);
-  max-width: 65ch;
 }
 
 /* ---------------------------------------------------------

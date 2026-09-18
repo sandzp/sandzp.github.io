@@ -43,7 +43,7 @@
     <div class="wrapper">
       <section class="reveal">
         <h2>medical entity grounding</h2>
-        <p style="color: var(--text-muted); max-width: 65ch;">
+        <p style="color: var(--text-muted);">
           Medical transcripts are increasingly turned into structured data by LLMs (conditions,
           drugs and doses, symptoms, allergies, procedures) because coding every note by hand
           doesn't scale. The problem: LLMs are free-text generators, and a free-text generator can
@@ -66,7 +66,7 @@
 
       <section class="reveal">
         <h2>why a closed-set judge</h2>
-        <p style="color: var(--text-muted); max-width: 65ch;">
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
           The fix for hallucination sounds simple: check each extracted entity against a real
           ontology (SNOMED CT, RxNorm, HPO) instead of trusting the raw span. The catch is that
           Typesafe's
@@ -77,14 +77,17 @@
           <a href="https://docs.typesafe.ai/primitives/noul" target="_blank" rel="noopener">Noul</a>
           yes/no question, or a
           <a href="https://docs.typesafe.ai/primitives/score" target="_blank" rel="noopener">Score</a>
-          against a rubric &mdash; and an ontology is anything but small: SNOMED CT, RxNorm, and HPO
-          each carry 100,000+ concepts. You can't hand Typesafe "the whole ontology" as its answer
-          set. The pipeline below exists to solve exactly that mismatch: a regular LLM does the
+          against a rubric. An ontology, though, is anything but small: SNOMED CT, RxNorm, and HPO
+          each carry 100,000+ concepts, so you can't hand Typesafe "the whole ontology" as its
+          answer set.
+        </p>
+        <p style="color: var(--text-muted);">
+          The pipeline below exists to solve exactly that mismatch. A regular LLM does the
           open-ended part, and Typesafe/Jev is only ever asked to pick from a small, per-entity
           candidate set it's handed. Because Jev can only select from that set, the worst it can do
-          is pick the wrong real candidate, or correctly return <code>NO_MATCH</code> &mdash; either
-          way, an explicit, checkable answer with a confidence score, never an unverifiable free-text
-          guess.
+          is pick the wrong real candidate, or correctly return <code>NO_MATCH</code>. Either way,
+          that's an explicit, checkable answer with a confidence score, never an unverifiable
+          free-text guess.
         </p>
       </section>
 
@@ -98,7 +101,7 @@
             </div>
             <p class="timeline-desc">
               A general-purpose LLM reads the transcription and pulls out candidate entities as raw
-              free-text spans across seven categories &mdash; conditions, past medical history, drugs
+              free-text spans across seven categories: conditions, past medical history, drugs
               (with dose/route/frequency as written), symptoms, phenotypes, allergies, and procedures.
               This stage is tuned for recall over precision: no vocabulary constraint, and ambiguous
               or hedged mentions get extracted rather than filtered out.
@@ -110,9 +113,9 @@
               <span class="timeline-meta">embedding + fuzzy search</span>
             </div>
             <p class="timeline-desc">
-              For each raw entity, retrieves a short list of plausible matches &mdash; SNOMED CT (or
-              ICD-10) for conditions/PMH/symptoms/procedures, RxNorm for drugs, HPO for phenotypes
-              &mdash; via embedding similarity with lexical/fuzzy fallback, top-k = 5&ndash;10. The
+              For each raw entity, retrieves a short list of plausible matches: SNOMED CT (or
+              ICD-10) for conditions/PMH/symptoms/procedures, RxNorm for drugs, HPO for phenotypes.
+              Retrieval uses embedding similarity with lexical/fuzzy fallback, top-k = 5&ndash;10. The
               shortlist always includes an explicit <code>NO_MATCH</code> option, so Stage 3 is never
               forced to pick an incorrect code when retrieval comes up empty.
             </p>
@@ -126,8 +129,8 @@
               Typesafe's Jev model receives the entity's text and surrounding context, plus the
               Stage 2 shortlist as its <em>complete</em> set of possible outputs, and selects the
               correct grounding (or <code>NO_MATCH</code>). It returns the selected answer, a
-              confidence score, and the full probability distribution over every listed option &mdash;
-              a verified, ontology-grounded entity instead of an unchecked guess.
+              confidence score, and the full probability distribution over every listed option: a
+              verified, ontology-grounded entity instead of an unchecked guess.
             </p>
           </li>
           <li class="timeline-item">
@@ -147,15 +150,66 @@
       </section>
 
       <section class="reveal">
+        <h2>a real example</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          Running an actual cardiac surgery operative note through the pipeline, via
+          <code>explore.ipynb</code> against the public MTSamples dataset. Three entities pulled
+          from the same note: a clean match, a lower-confidence one, and a genuine retrieval miss,
+          because a demo that only shows the clean case isn't telling the whole story.
+        </p>
+        <ol class="timeline">
+          <li class="timeline-item">
+            <div class="timeline-header">
+              <span class="timeline-role">"morbidly obese" &middot; <span class="company">past_medical_history</span></span>
+              <span class="timeline-meta">confidence 0.98</span>
+            </div>
+            <p class="timeline-desc">
+              Context: <em>"The patient has diabetes and is morbidly obese."</em> Stage 2 retrieved
+              seven MONDO candidates, several genuinely plausible near-misses among them:
+              <code>morbid obesity</code>, <code>Prader-Willi syndrome</code>,
+              <code>obesity due to CEP19 deficiency</code>, <code>central sleep apnea syndrome</code>.
+              Jev correctly picked <strong style="color: var(--text);">morbid obesity</strong>
+              (MONDO:0005139).
+            </p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-header">
+              <span class="timeline-role">"Aortic valve stenosis" &middot; <span class="company">condition</span></span>
+              <span class="timeline-meta">confidence 0.71</span>
+            </div>
+            <p class="timeline-desc">
+              Context: <em>"DIAGNOSIS: Aortic valve stenosis with coronary artery disease..."</em>
+              Correctly grounded to <strong style="color: var(--text);">aortic valve stenosis</strong>,
+              but at a meaningfully lower confidence than the obesity match above: a real signal
+              worth flagging, not noise, when scoring extraction quality across a whole document.
+            </p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-header">
+              <span class="timeline-role">"two-vessel coronary artery bypass grafting&hellip;" &middot; <span class="company">procedure</span></span>
+              <span class="timeline-meta">NO_MATCH &middot; confidence 0.00</span>
+            </div>
+            <p class="timeline-desc">
+              A genuine miss, not a rejection: confidence 0.00 here means Stage 2's SNOMED CT
+              retrieval came back empty for this phrasing, so Jev was never even called. This is
+              the failure mode the shortlist-size and retrieval-implementation open questions below
+              are actually about: long, compound-worded procedure descriptions are exactly where a
+              top-k embedding search can come up short.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="reveal">
         <h2>open questions</h2>
-        <p style="color: var(--text-muted); max-width: 65ch; margin-bottom: 1rem;">
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
           Still-open implementation decisions, left honest rather than papered over:
         </p>
-        <ul style="color: var(--text-muted); max-width: 65ch; padding-left: 1.25rem; line-height: 1.9;">
-          <li><strong style="color: var(--text);">Ontology licensing</strong> &mdash; SNOMED CT and RxNorm require UMLS access; MONDO, HPO, Uberon, ChEBI, and NCIt don't.</li>
-          <li><strong style="color: var(--text);">Retrieval implementation</strong> &mdash; a precomputed embedding index vs. a lexical/fuzzy search (e.g. OLS4) as a first version.</li>
-          <li><strong style="color: var(--text);">Dosing reference data</strong> &mdash; the actual source for Stage 4's reference dosing ranges.</li>
-          <li><strong style="color: var(--text);">Shortlist size</strong> &mdash; too small risks omitting the correct code; too large stops being a closed list Typesafe can classify against.</li>
+        <ul style="color: var(--text-muted); padding-left: 1.25rem; line-height: 1.9;">
+          <li><strong style="color: var(--text);">Ontology licensing:</strong> SNOMED CT and RxNorm require UMLS access; MONDO, HPO, Uberon, ChEBI, and NCIt don't.</li>
+          <li><strong style="color: var(--text);">Retrieval implementation:</strong> a precomputed embedding index vs. a lexical/fuzzy search (e.g. OLS4) as a first version.</li>
+          <li><strong style="color: var(--text);">Dosing reference data:</strong> the actual source for Stage 4's reference dosing ranges.</li>
+          <li><strong style="color: var(--text);">Shortlist size:</strong> too small risks omitting the correct code; too large stops being a closed list Typesafe can classify against.</li>
         </ul>
       </section>
 
@@ -175,9 +229,9 @@
 
       <section class="reveal">
         <h2>code</h2>
-        <p style="color: var(--text-muted); max-width: 65ch;">
+        <p style="color: var(--text-muted);">
           Demo pipeline built against a public sample of de-identified medical transcriptions
-          (Kaggle's <em>Medical Transcriptions</em> dataset). Not a production system &mdash; a
+          (Kaggle's <em>Medical Transcriptions</em> dataset). Not a production system, just a
           working proof of the grounding architecture.
         </p>
         <div class="links" style="margin-top: 0.75rem;">
