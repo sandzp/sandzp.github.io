@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6E791XB782"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-6E791XB782');
+  </script>
+
+  <title>Medical Entity Grounding &middot; Sandip Panesar</title>
+  <meta name="description" content="A demo pipeline that grounds LLM-extracted medical entities against clinical ontologies using Typesafe's closed-set Jev model, instead of trusting free-text output." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrapper">
+      <a class="site-title" href="index.html"><span class="prompt">&gt;</span> sandip<span class="cursor"></span></a>
+      <nav class="site-nav">
+        <ul>
+          <li><a href="index.html">home</a></li>
+          <li><a href="about.html">about</a></li>
+          <li><a href="projects.html">projects</a></li>
+          <li><a href="publications.html">publications</a></li>
+          <li><a href="contact.html">contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrapper">
+      <section class="reveal">
+        <h2>medical entity grounding</h2>
+        <p style="color: var(--text-muted); max-width: 65ch;">
+          Medical transcripts are increasingly turned into structured data by LLMs — conditions,
+          drugs and doses, symptoms, allergies, procedures — because coding every note by hand
+          doesn't scale. The problem: LLMs are free-text generators, and a free-text generator can
+          hallucinate a drug that was never mentioned, misread a dose, or assert a diagnosis the
+          transcript doesn't support. In a medical record that's not cosmetic — it's a patient-safety
+          and liability risk. This demo grounds every extracted entity against a real clinical
+          ontology before it's trusted, using
+          <a href="https://docs.typesafe.ai/concepts/system-one" target="_blank" rel="noopener">Typesafe's System One</a>
+          and its <strong>Jev</strong> model as the verification step.
+        </p>
+      </section>
+
+      <section class="reveal">
+        <img
+          class="diagram"
+          src="assets/img/medical-grounding-architecture.svg"
+          alt="Entity grounding pipeline diagram: a medical transcription goes through Stage 1 extraction by an open-ended LLM, Stage 2 ontology retrieval narrows SNOMED CT, RxNorm, and HPO down to a per-entity shortlist, Stage 3 has Typesafe classify against that closed shortlist (or NO_MATCH), and drug entities additionally go through Stage 4 dose validation against a formulary reference range."
+        />
+      </section>
+
+      <section class="reveal">
+        <h2>why a closed-set judge</h2>
+        <p style="color: var(--text-muted); max-width: 65ch;">
+          The fix for hallucination sounds simple: check each extracted entity against a real
+          ontology (SNOMED CT, RxNorm, HPO) instead of trusting the raw span. The catch is that
+          Typesafe's
+          <a href="https://docs.typesafe.ai/concepts/system-one" target="_blank" rel="noopener">System One</a>
+          only ever judges from an explicitly enumerated list of options — a
+          <a href="https://docs.typesafe.ai/primitives/choice" target="_blank" rel="noopener">Choice</a>
+          between named alternatives, a
+          <a href="https://docs.typesafe.ai/primitives/noul" target="_blank" rel="noopener">Noul</a>
+          yes/no question, or a
+          <a href="https://docs.typesafe.ai/primitives/score" target="_blank" rel="noopener">Score</a>
+          against a rubric &mdash; and an ontology is anything but small: SNOMED CT, RxNorm, and HPO
+          each carry 100,000+ concepts. You can't hand Typesafe "the whole ontology" as its answer
+          set. The pipeline below exists to solve exactly that mismatch: a regular LLM does the
+          open-ended part, and Typesafe/Jev is only ever asked to pick from a small, per-entity
+          candidate set it's handed. Because Jev can only select from that set, the worst it can do
+          is pick the wrong real candidate, or correctly return <code>NO_MATCH</code> &mdash; either
+          way, an explicit, checkable answer with a confidence score, never an unverifiable free-text
+          guess.
+        </p>
+      </section>
+
+      <section class="reveal">
+        <h2>the pipeline</h2>
+        <ol class="timeline">
+          <li class="timeline-item">
+            <div class="timeline-header">
+              <span class="timeline-role">Stage 1 &middot; Extraction</span>
+              <span class="timeline-meta">open-ended LLM</span>
+            </div>
+            <p class="timeline-desc">
+              A general-purpose LLM reads the transcription and pulls out candidate entities as raw
+              free-text spans across seven categories &mdash; conditions, past medical history, drugs
+              (with dose/route/frequency as written), symptoms, phenotypes, allergies, and procedures.
+              This stage is tuned for recall over precision: no vocabulary constraint, and ambiguous
+              or hedged mentions get extracted rather than filtered out.
+            </p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-header">
+              <span class="timeline-role">Stage 2 &middot; Ontology candidate retrieval</span>
+              <span class="timeline-meta">embedding + fuzzy search</span>
+            </div>
+            <p class="timeline-desc">
+              For each raw entity, retrieves a short list of plausible matches &mdash; SNOMED CT (or
+              ICD-10) for conditions/PMH/symptoms/procedures, RxNorm for drugs, HPO for phenotypes
+              &mdash; via embedding similarity with lexical/fuzzy fallback, top-k = 5&ndash;10. The
+              shortlist always includes an explicit <code>NO_MATCH</code> option, so Stage 3 is never
+              forced to pick an incorrect code when retrieval comes up empty.
+            </p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-header">
+              <span class="timeline-role">Stage 3 &middot; Typesafe classification</span>
+              <span class="timeline-meta">System One &middot; Jev</span>
+            </div>
+            <p class="timeline-desc">
+              Typesafe's Jev model receives the entity's text and surrounding context, plus the
+              Stage 2 shortlist as its <em>complete</em> set of possible outputs, and selects the
+              correct grounding (or <code>NO_MATCH</code>). It returns the selected answer, a
+              confidence score, and the full probability distribution over every listed option &mdash;
+              a verified, ontology-grounded entity instead of an unchecked guess.
+            </p>
+          </li>
+          <li class="timeline-item">
+            <div class="timeline-header">
+              <span class="timeline-role">Stage 4 &middot; Dose validation</span>
+              <span class="timeline-meta">drugs only</span>
+            </div>
+            <p class="timeline-desc">
+              Once a drug is grounded to an RxNorm concept, its dose is normalized to structured
+              units, checked against a reference dosing range (formulary data, RxNorm's dosing
+              fields, or DailyMed labels), and Typesafe classifies it into
+              <code>within_range</code>, <code>above_range</code>, <code>below_range</code>, or
+              <code>unknown_reference</code>.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="reveal">
+        <h2>open questions</h2>
+        <p style="color: var(--text-muted); max-width: 65ch; margin-bottom: 1rem;">
+          Still-open implementation decisions, left honest rather than papered over:
+        </p>
+        <ul style="color: var(--text-muted); max-width: 65ch; padding-left: 1.25rem; line-height: 1.9;">
+          <li><strong style="color: var(--text);">Ontology licensing</strong> &mdash; SNOMED CT and RxNorm require UMLS access; MONDO, HPO, Uberon, ChEBI, and NCIt don't.</li>
+          <li><strong style="color: var(--text);">Retrieval implementation</strong> &mdash; a precomputed embedding index vs. a lexical/fuzzy search (e.g. OLS4) as a first version.</li>
+          <li><strong style="color: var(--text);">Dosing reference data</strong> &mdash; the actual source for Stage 4's reference dosing ranges.</li>
+          <li><strong style="color: var(--text);">Shortlist size</strong> &mdash; too small risks omitting the correct code; too large stops being a closed list Typesafe can classify against.</li>
+        </ul>
+      </section>
+
+      <section class="reveal">
+        <h2>stack</h2>
+        <ul class="tag-list">
+          <li>Typesafe SDK</li>
+          <li>Jev</li>
+          <li>OpenAI</li>
+          <li>SNOMED CT</li>
+          <li>RxNorm</li>
+          <li>HPO</li>
+          <li>Python</li>
+          <li>pandas</li>
+        </ul>
+      </section>
+
+      <section class="reveal">
+        <h2>code</h2>
+        <p style="color: var(--text-muted); max-width: 65ch;">
+          Demo pipeline built against a public sample of de-identified medical transcriptions
+          (Kaggle's <em>Medical Transcriptions</em> dataset). Not a production system &mdash; a
+          working proof of the grounding architecture.
+        </p>
+        <div class="links" style="margin-top: 0.75rem;">
+          <a href="https://github.com/sandzp/medical-demo-typesafe" target="_blank" rel="noopener">view the repo on GitHub &rarr;</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrapper">
+      <span>&copy; <span id="year"></span> sandip panesar</span>
+      <span><a href="https://github.com/sandzp">github.com/sandzp</a></span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

@@ -506,6 +506,18 @@ section h2::after {
   box-shadow: 0 0 0 1px var(--glow-soft), 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
+/* Larger frame for technical diagrams meant to be read, not just glanced at */
+.diagram {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  margin: 0 auto 1.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 0 0 1px var(--glow-soft), 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
 /* ---------------------------------------------------------
    Cards (projects)
 --------------------------------------------------------- */
