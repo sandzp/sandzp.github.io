@@ -42,7 +42,7 @@
   <main>
     <div class="wrapper">
       <section class="reveal">
-        <h2>medical entity grounding with typesafe's jev</h2>
+        <h2>medical entity grounding with typesafe's jev </h2>
         <p style="color: var(--text-muted);">
           Medical transcripts are increasingly turned into structured data by LLMs (conditions,
           drugs and doses, symptoms, allergies, procedures) because coding every note by hand
@@ -228,20 +228,6 @@
           <li><strong style="color: var(--text);">Retrieval implementation:</strong> live OLS4 lookups work and cost nothing, but a precomputed embedding index would be faster and give more control over ranking, worth it once query volume justifies the setup.</li>
           <li><strong style="color: var(--text);">Dosing reference data:</strong> the actual source for Stage 4's reference dosing ranges.</li>
           <li><strong style="color: var(--text);">Shortlist size:</strong> too small risks omitting the correct code; too large stops being a closed list Typesafe can classify against.</li>
-        </ul>
-      </section>
-
-      <section class="reveal">
-        <h2>stack</h2>
-        <ul class="tag-list">
-          <li>Typesafe SDK</li>
-          <li>Jev</li>
-          <li>OpenAI</li>
-          <li>SNOMED CT</li>
-          <li>RxNorm</li>
-          <li>HPO</li>
-          <li>Python</li>
-          <li>pandas</li>
         </ul>
       </section>
 
