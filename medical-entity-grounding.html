@@ -44,11 +44,11 @@
       <section class="reveal">
         <h2>medical entity grounding</h2>
         <p style="color: var(--text-muted); max-width: 65ch;">
-          Medical transcripts are increasingly turned into structured data by LLMs — conditions,
-          drugs and doses, symptoms, allergies, procedures — because coding every note by hand
+          Medical transcripts are increasingly turned into structured data by LLMs (conditions,
+          drugs and doses, symptoms, allergies, procedures) because coding every note by hand
           doesn't scale. The problem: LLMs are free-text generators, and a free-text generator can
           hallucinate a drug that was never mentioned, misread a dose, or assert a diagnosis the
-          transcript doesn't support. In a medical record that's not cosmetic — it's a patient-safety
+          transcript doesn't support. In a medical record that's not cosmetic. It's a patient-safety
           and liability risk. This demo grounds every extracted entity against a real clinical
           ontology before it's trusted, using
           <a href="https://docs.typesafe.ai/concepts/system-one" target="_blank" rel="noopener">Typesafe's System One</a>
@@ -71,7 +71,7 @@
           ontology (SNOMED CT, RxNorm, HPO) instead of trusting the raw span. The catch is that
           Typesafe's
           <a href="https://docs.typesafe.ai/concepts/system-one" target="_blank" rel="noopener">System One</a>
-          only ever judges from an explicitly enumerated list of options — a
+          only ever judges from an explicitly enumerated list of options: a
           <a href="https://docs.typesafe.ai/primitives/choice" target="_blank" rel="noopener">Choice</a>
           between named alternatives, a
           <a href="https://docs.typesafe.ai/primitives/noul" target="_blank" rel="noopener">Noul</a>
