@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6E791XB782"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-6E791XB782');
+  </script>
+
+  <title>Biomedical Knowledge Discovery: Presentation &middot; Sandip Panesar</title>
+  <meta name="description" content="A 30-minute talk on distilling BioBERT and SciBERT into static-equivalent word embeddings for biomedical knowledge discovery from unstructured text." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Deliberate single light look: journal white, emerald ink, amber second voice. */
+:root{
+  color-scheme:light;
+  --bg:#FFFFFF; --surface:#F1F6F2; --ink:#0F1A14; --muted:#4A5A51; --faint:#86948C; --rule:#D2DDD5;
+  --accent:#0B6E4F; --accent-soft:#E2F0E8; --bio:#0B6E4F; --sci:#C98500; --static:#9AA69F; --warm:#C2410C;
+  --display:"Newsreader", "Iowan Old Style", Georgia, serif;
+  --body:"Figtree", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono:"DM Mono", ui-monospace, Menlo, monospace;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;overflow:hidden}
+*{box-sizing:border-box}
+
+.deck{position:relative;height:100%}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;padding-block:clamp(24px,6vh,64px) 72px;padding-inline:clamp(16px,5vw,80px);overflow-y:auto;opacity:0;visibility:hidden;transform:translateX(24px);transition:opacity .4s ease,transform .4s ease,visibility 0s linear .4s;background:var(--bg)}
+.slide.active{opacity:1;visibility:visible;transform:none;transition:opacity .4s ease,transform .4s ease}
+.slide-inner{width:100%;max-width:1240px;margin:auto;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,8fr);gap:clamp(24px,4vw,64px);align-items:start}
+.slide-inner>.head{display:flex;flex-direction:column;gap:18px;border-top:6px solid var(--accent);padding-top:18px;position:sticky;top:0}
+.slide-inner>.body{display:flex;flex-direction:column;gap:clamp(14px,2.4vh,26px);min-width:0}
+.slide.wide .slide-inner{grid-template-columns:minmax(0,1fr);gap:clamp(16px,3vh,32px)}
+.slide.wide .slide-inner>.head{position:static;display:grid;grid-template-columns:auto 1fr;column-gap:28px;align-items:end}
+.slide.wide .head .eyebrow{grid-column:1/-1}
+.slide.wide h2{grid-column:1/-1;max-width:28ch}
+@media (max-width:860px){
+  .slide-inner{grid-template-columns:minmax(0,1fr)}
+  .slide-inner>.head{position:static}
+}
+
+.eyebrow{font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.eyebrow span.sec{color:var(--muted);font-weight:500;letter-spacing:.1em}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.01em}
+h1{font-size:clamp(36px,5.6vw,76px);line-height:1.02;font-weight:500}
+h2{font-size:clamp(28px,3.4vw,46px);line-height:1.08}
+h3{font-family:var(--body);font-size:clamp(17px,1.5vw,20px);line-height:1.3;font-weight:700}
+p{margin:0;max-width:65ch}
+.lede{font-family:var(--display);font-size:clamp(19px,1.8vw,24px);line-height:1.4;color:var(--muted);max-width:56ch}
+.small{font-size:14px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+.small.mono{font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+em.key{font-style:italic;color:var(--accent);font-weight:600}
+
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:clamp(16px,2.4vw,32px);align-items:start}
+.cols.c2{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.block{display:flex;flex-direction:column;gap:8px}
+.block h3{display:flex;gap:10px;align-items:baseline}
+.block p{color:var(--muted)}
+ul.clean{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:14px}
+ul.clean li{padding-left:24px;position:relative;max-width:62ch}
+ul.clean li::before{content:"";position:absolute;left:0;top:.55em;width:9px;height:9px;background:var(--sci);transform:rotate(45deg)}
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:0}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:baseline;max-width:74ch;padding-block:12px;border-bottom:1px solid var(--rule)}
+ol.steps li::before{content:counter(s);font-family:var(--display);font-size:34px;line-height:1;color:var(--accent);font-weight:500}
+
+.panel{background:var(--surface);border-radius:0;padding:clamp(16px,2vw,26px)}
+.quote{font-family:var(--display);font-size:clamp(20px,2vw,27px);line-height:1.35;max-width:58ch;padding:22px 26px;background:var(--accent);color:#FFFFFF}
+.quote b{color:#FFE2A3}
+.stat{display:flex;flex-direction:column;gap:4px;border-left:2px solid var(--sci);padding-left:14px}
+.stat b{font-family:var(--display);font-size:clamp(34px,4vw,54px);font-weight:500;line-height:1;font-variant-numeric:tabular-nums;color:var(--accent)}
+.stat span{font-size:14px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:24px}
+
+.vec{font-family:var(--mono);font-size:14px;background:var(--accent-soft);color:var(--accent);padding:1px 6px;white-space:nowrap}
+.formula{font-family:var(--mono);font-size:clamp(14px,1.3vw,17px);background:var(--surface);border-left:4px solid var(--accent);padding:14px 18px;overflow-x:auto;white-space:pre;line-height:1.7}
+.tok{display:inline-block;font-family:var(--mono);font-size:14px;border:1.5px solid var(--rule);background:var(--bg);padding:3px 8px;margin:3px 2px}
+.tok.sub{border-color:var(--warm);color:var(--warm)}
+.tok.hit{border-color:var(--accent);color:var(--accent);font-weight:500}
+
+figure{margin:0;display:flex;flex-direction:column;gap:10px}
+figure svg{width:100%;height:auto;max-width:100%;display:block}
+figcaption{font-size:14px;color:var(--muted);max-width:75ch;font-style:italic}
+.figwrap{overflow-x:auto}
+
+table.data{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:16px;width:100%}
+table.data th,table.data td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data thead th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:2px solid var(--ink)}
+table.data td.best{color:var(--accent);font-weight:700;background:var(--accent-soft)}
+.tablewrap{overflow-x:auto}
+
+.legend{display:flex;flex-wrap:wrap;gap:18px;font-size:14px;color:var(--muted)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+
+/* title slides: full emerald ground */
+.slide.title-slide{background:var(--accent);color:#FFFFFF}
+.title-slide .slide-inner{display:flex;flex-direction:column;align-items:stretch;gap:clamp(18px,3.4vh,34px)}
+.title-slide .eyebrow{color:#FFE2A3}
+.title-slide .lede{color:#D6EBDF}
+.title-slide .small,.title-slide .block p{color:#D6EBDF}
+.title-slide .small.mono{color:#FFE2A3}
+.title-slide a{color:#FFFFFF}
+.title-meta{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:15px;color:#D6EBDF}
+.title-meta b{color:#FFFFFF;font-weight:700}
+.agenda{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:0;border-top:1px solid rgba(255,255,255,.35)}
+.agenda button{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:14px 12px 12px;border-right:1px solid rgba(255,255,255,.18)}
+.agenda button:hover,.agenda button:focus-visible{background:rgba(255,255,255,.1)}
+.agenda button:focus-visible{outline:2px solid #FFE2A3}
+.agenda .n{font-family:var(--display);font-size:30px;line-height:1;color:#FFE2A3}
+.agenda .t{font-size:15px;font-weight:700;color:#FFFFFF}
+.agenda .m{font-size:13px;color:#D6EBDF}
+
+/* chrome */
+.bar{position:fixed;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:10px clamp(16px,3vw,28px) calc(10px + env(safe-area-inset-bottom,0px));font-size:13px;color:var(--muted);z-index:5}
+.bar .sec{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw;font-weight:600}
+.bar button{all:unset;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:var(--ink);color:#FFFFFF;font-size:15px}
+.bar #notesbtn{width:auto;padding:0 14px;border-radius:17px;background:transparent;color:var(--ink);border:1.5px solid var(--ink);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.bar button:hover{background:var(--accent);color:#FFFFFF;border-color:var(--accent)}
+.bar button:focus-visible{outline:2px solid var(--sci);outline-offset:2px}
+.bar .count{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+body.on-title .bar,body.on-title .bar .count{color:#D6EBDF}
+body.on-title .bar button{background:#FFFFFF;color:var(--accent)}
+body.on-title .bar #notesbtn{background:transparent;color:#FFFFFF;border-color:#FFFFFF}
+.progress{position:fixed;left:0;top:env(safe-area-inset-top,0px);bottom:0;width:6px;background:var(--sci);transform-origin:top;transition:transform .35s ease;z-index:6}
+.notes{position:fixed;left:6px;right:0;bottom:54px;max-height:36vh;overflow-y:auto;background:var(--ink);color:#E8F0EB;padding:16px clamp(16px,3vw,32px);font-size:16px;z-index:4}
+.notes .nh{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#FFE2A3;margin-bottom:6px;display:flex;justify-content:space-between;gap:12px}
+.notes p{max-width:90ch}
+aside.speaker{display:none}
+.bar .home{color:inherit;font-weight:700;text-decoration:none;margin-right:6px}
+.bar .home:hover{color:var(--accent)}
+body.on-title .bar .home:hover{color:#FFFFFF}
+
+@media (max-width:640px){
+  .bar .hint,.bar .sec{display:none}
+  body{font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  .slide,.slide.active,.progress{transition:none;transform:none}
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<main class="deck" id="deck">
+
+<!-- 1 TITLE -->
+<section class="slide title-slide" data-section="Opening">
+  <div class="slide-inner">
+    <div class="eyebrow">Research talk · Biomedical NLP</div>
+    <h1>Biomedical knowledge discovery from unstructured text using contextual word embeddings</h1>
+    <p class="lede">Can BERT, a model that gives every word a different vector in every sentence, be distilled into one stable vector per word that captures scientific meaning better than Word2Vec?</p>
+    <div class="title-meta">
+      <span><b>Sandip S. Panesar</b></span>
+      <span>School of Information, UC Berkeley</span>
+      <span>Preprint · Research Square · Nov 2022</span>
+      <span class="mono">doi:10.21203/rs.3.rs-2286334/v1</span>
+    </div>
+    <nav class="agenda" aria-label="Sections">
+      <button data-goto="rationale"><span class="n">01</span><span class="t">Rationale</span><span class="m">~4 min</span></button>
+      <button data-goto="embeddings"><span class="n">02</span><span class="t">Static vs. contextual embeddings</span><span class="m">~6 min</span></button>
+      <button data-goto="transformer"><span class="n">03</span><span class="t">Transformer architecture</span><span class="m">~6 min</span></button>
+      <button data-goto="method"><span class="n">04</span><span class="t">Methodology</span><span class="m">~6 min</span></button>
+      <button data-goto="results"><span class="n">05</span><span class="t">Results</span><span class="m">~5 min</span></button>
+      <button data-goto="conclusions"><span class="n">06</span><span class="t">Conclusions &amp; uses</span><span class="m">~3 min</span></button>
+    </nav>
+  </div>
+  <aside class="speaker">Welcome. This talk walks through one study end to end: why we would want to mine literature with word vectors, what embeddings are, how the transformer changes them, what I did, what came out, and where it could be used. Arrow keys move slides; press N to toggle these notes. Budget about 30 minutes, timings are shown on the agenda.</aside>
+</section>
+
+<!-- 2 RATIONALE: problem -->
+<section class="slide" id="rationale" data-section="01 · Rationale">
+  <div class="slide-inner">
+    <div class="eyebrow">01 · Rationale</div>
+    <h2>Most biomedical knowledge is locked inside prose</h2>
+    <div class="cols c2">
+      <div class="block">
+        <p class="lede">Journals, books and abstracts describe concepts, objects and events. The knowledge lives in the <em class="key">relationships between them</em>, and those relationships are never written down as a table.</p>
+      </div>
+      <ul class="clean">
+        <li><b>Supervised extraction does not scale.</b> Relation-extraction models need large, manually labelled datasets for every new relation type.</li>
+        <li><b>The literature outpaces reading.</b> CORD-19 alone held more than 500,000 COVID-19 articles and abstracts within months of the pandemic starting.</li>
+        <li><b>Unsupervised methods need no labels.</b> If a model can learn what words mean from raw text, the geometry of its vectors becomes a searchable map of the field.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="speaker">Set the problem. Knowledge in papers is relational: drug X affects receptor Y in tissue Z. Supervised NLP can extract this but needs labels for every relation, which is expensive and brittle. The appeal of unsupervised embeddings is that they learn from raw text only, so they scale with the literature.</aside>
+</section>
+
+<!-- 3 RATIONALE: precedent -->
+<section class="slide" data-section="01 · Rationale">
+  <div class="slide-inner">
+    <div class="eyebrow">01 · Rationale <span class="sec">/ precedent</span></div>
+    <h2>Word vectors have already predicted discoveries before experiments confirmed them</h2>
+    <div class="cols c2">
+      <div class="panel block">
+        <span class="small mono">Tshitoyan et al., Nature 2019 · materials science</span>
+        <h3>Thermoelectric materials</h3>
+        <p>200-d Word2Vec skip-gram vectors were trained on materials-science abstracts. Material names ranked by cosine similarity to <span class="vec">thermoelectric</span> surfaced novel thermoelectric compounds that were later verified.</p>
+        <p>Some of those materials had <b>never appeared in the same document</b> as the word. The link ran indirectly through neighbours such as <span class="vec">chalcogenide</span> and <span class="vec">band gap</span>.</p>
+      </div>
+      <div class="panel block">
+        <span class="small mono">Venkatakrishnan et al., eLife 2020 · biomedicine</span>
+        <h3>ACE2 tissue reservoirs</h3>
+        <p>The same technique applied to biomedical documents proposed new tissue reservoirs of ACE2, the receptor SARS-CoV-2 uses to enter host cells.</p>
+        <p>Predictions were validated with a molecular inference platform, which closed the loop from text geometry to biology.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker">This is the motivating precedent. The key idea is latent knowledge: a relation implied by the text as a whole but not stated in any single sentence. Both groups used static embeddings, and both explicitly speculated that context-aware models like BERT might do better. That speculation is what this project tests.</aside>
+</section>
+
+<!-- 4 RATIONALE: question -->
+<section class="slide" data-section="01 · Rationale">
+  <div class="slide-inner">
+    <div class="eyebrow">01 · Rationale <span class="sec">/ the gap</span></div>
+    <h2>Both papers suggested BERT might do better. Nobody had shown how to use it for this.</h2>
+    <div class="cols">
+      <div class="block"><h3>BERT wins downstream tasks</h3><p>Named entity recognition, QA, classification. It is unknown whether that advantage carries over to its <em>internal word representations</em>.</p></div>
+      <div class="block"><h3>BERT has no single word vector</h3><p>Each occurrence of a word gets a different vector depending on its sentence. Discovery by cosine ranking needs one vector per concept.</p></div>
+      <div class="block"><h3>BERT has a fixed vocabulary</h3><p>Roughly 30,000 tokens. Unseen biomedical terms are split into sub-word pieces that must be recombined.</p></div>
+    </div>
+    <div class="quote"><b>Hypothesis.</b> Aggregating BERT's contextual vectors over many sentences yields static-equivalent embeddings that capture biomedical meaning better than Word2Vec or GloVe, at lower cost than training on a whole corpus.</div>
+  </div>
+  <aside class="speaker">Three obstacles stand between BERT and the Tshitoyan workflow. The hypothesis builds on Bommasani et al. (ACL 2020), who distilled BERT into static vectors and beat static models on general-domain benchmarks like SimLex-999. The question here is whether that holds in biomedicine, and with which BERT variant, layer and settings.</aside>
+</section>
+
+<!-- 5 EMBEDDINGS: what -->
+<section class="slide" id="embeddings" data-section="02 · Word embeddings">
+  <div class="slide-inner">
+    <div class="eyebrow">02 · Word embeddings</div>
+    <h2>A word embedding is a coordinate in meaning-space</h2>
+    <div class="cols c2">
+      <div class="block" style="gap:16px">
+        <p class="lede">“You shall know a word by the company it keeps.” Words used in similar contexts end up near each other.</p>
+        <ul class="clean">
+          <li>Each word maps to a dense vector, typically 200 to 768 numbers.</li>
+          <li>Similarity is the angle between vectors: <span class="vec">cos θ = a·b / (‖a‖‖b‖)</span>, from −1 to 1.</li>
+          <li>Discovery means ranking every vocabulary word by its cosine to a query word and reading the top of the list.</li>
+        </ul>
+      </div>
+      <figure>
+        <div class="figwrap">
+        <svg viewBox="44 60 482 276" role="img" aria-label="Two-dimensional sketch of a vector space where drug names cluster near each other and near the query word, and unrelated words sit far away">
+          <line x1="50" y1="300" x2="520" y2="300" stroke="var(--rule)"/>
+          <line x1="50" y1="300" x2="50" y2="30" stroke="var(--rule)"/>
+          <line x1="50" y1="300" x2="300" y2="120" stroke="var(--accent)" stroke-width="2"/>
+          <line x1="50" y1="300" x2="350" y2="150" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4"/>
+          <path d="M112.6 268.7 A70 70 0 0 0 106.8 259.1" fill="none" stroke="var(--sci)" stroke-width="2"/>
+          <text x="124" y="262" font-family="Newsreader, Georgia, serif" font-style="italic" font-size="16" fill="var(--sci)">θ</text>
+          <g font-family="DM Mono, monospace" font-size="12">
+            <circle cx="300" cy="120" r="6" fill="var(--accent)"/><text x="300" y="104" text-anchor="middle" fill="var(--ink)" font-weight="500">hydroxychloroquine</text>
+            <circle cx="350" cy="150" r="6" fill="var(--accent)"/><text x="362" y="154" fill="var(--ink)">chloroquine</text>
+            <circle cx="380" cy="105" r="4.5" fill="var(--muted)"/><text x="392" y="109" fill="var(--muted)">antimalarial</text>
+            <circle cx="420" cy="172" r="4.5" fill="var(--muted)"/><text x="420" y="192" text-anchor="middle" fill="var(--muted)">azithromycin</text>
+            <circle cx="110" cy="80" r="4.5" fill="var(--faint)"/><text x="122" y="84" fill="var(--faint)">ventilator</text>
+            <circle cx="440" cy="268" r="4.5" fill="var(--faint)"/><text x="428" y="272" text-anchor="end" fill="var(--faint)">questionnaire</text>
+          </g>
+          <text x="50" y="326" font-family="Figtree, sans-serif" font-size="13" fill="var(--muted)"><tspan fill="var(--sci)" font-style="italic">θ</tspan> small → cosine near 1 → similar meaning</text>
+        </svg>
+        </div>
+        <figcaption>Illustrative two-dimensional sketch. Real embeddings have hundreds of dimensions; the paper’s Figure 1 shows a t-SNE projection of the 30 nearest neighbours of “hydroxychloroquine” in CORD-19, where drugs cluster by class and the name “gautret” (author of the first HCQ COVID-19 trial) sits close by.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <aside class="speaker">Introduce the distributional hypothesis (Firth). Emphasise cosine similarity, because every result later in the talk is a cosine. The Gautret detail from the paper's Figure 1 is a nice hook: the vectors pick up who wrote about what, not only pharmacology.</aside>
+</section>
+
+<!-- 6 EMBEDDINGS: static -->
+<section class="slide" data-section="02 · Word embeddings">
+  <div class="slide-inner">
+    <div class="eyebrow">02 · Word embeddings <span class="sec">/ static models</span></div>
+    <h2>Static models learn one vector per word from co-occurrence</h2>
+    <div class="cols">
+      <div class="panel block">
+        <span class="small mono">Mikolov et al., 2013</span>
+        <h3>Word2Vec skip-gram</h3>
+        <p>A shallow network predicts the words in a window around each target word. The hidden-layer weights become the embedding. Negative sampling keeps training cheap.</p>
+      </div>
+      <div class="panel block">
+        <span class="small mono">Pennington et al., 2014</span>
+        <h3>GloVe</h3>
+        <p>Factorises a global word–word co-occurrence matrix so that vector dot products approximate log co-occurrence counts.</p>
+      </div>
+      <div class="panel block">
+        <span class="small mono">Zhang et al., 2019</span>
+        <h3>BioWordVec</h3>
+        <p>FastText-style sub-word vectors trained on more than 27 million PubMed articles and combined with the MeSH controlled vocabulary.</p>
+      </div>
+    </div>
+    <ul class="clean">
+      <li><b>Strength:</b> one fixed vector per word, which makes ranking and clustering straightforward.</li>
+      <li><b>Cost:</b> the model must be trained on the entire corpus, and its vocabulary is only what that corpus contains.</li>
+      <li><b>Blind spot:</b> every sense of a word is blended into a single point.</li>
+    </ul>
+  </div>
+  <aside class="speaker">These are the three baseline families. Note that Word2Vec and GloVe were trained from scratch on CORD-19 for this study; BioWordVec was used pre-trained. The cost point matters for the conclusion: static approaches need a full training run on every new corpus.</aside>
+</section>
+
+<!-- 7 EMBEDDINGS: static vs contextual -->
+<section class="slide" data-section="02 · Word embeddings">
+  <div class="slide-inner">
+    <div class="eyebrow">02 · Word embeddings <span class="sec">/ static vs. contextual</span></div>
+    <h2>Same word, different meaning: static models cannot tell</h2>
+    <figure>
+      <div class="figwrap">
+      <svg viewBox="0 0 960 300" role="img" aria-label="Static model maps three uses of the word culture to one vector. Contextual model maps each sentence's use of culture to its own vector, with the two lab senses close together and the workplace sense far away.">
+        <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--faint)"/></marker></defs>
+        <g font-family="Figtree, sans-serif" font-size="13" fill="var(--ink)">
+          <text x="20" y="28" font-family="DM Mono, monospace" font-size="11" fill="var(--muted)" letter-spacing="1.2">SENTENCES</text>
+          <text x="20" y="80">“blood <tspan font-weight="600" fill="var(--accent)">culture</tspan> grew S. aureus”</text>
+          <text x="20" y="150">“viral <tspan font-weight="600" fill="var(--accent)">culture</tspan> in Vero cells”</text>
+          <text x="20" y="220">“a safety <tspan font-weight="600" fill="var(--warm)">culture</tspan> among nurses”</text>
+
+          <text x="380" y="28" font-family="DM Mono, monospace" font-size="11" fill="var(--muted)" letter-spacing="1.2">STATIC (WORD2VEC)</text>
+          <line x1="300" y1="76" x2="440" y2="146" stroke="var(--faint)" marker-end="url(#ah2)"/>
+          <line x1="300" y1="146" x2="440" y2="150" stroke="var(--faint)" marker-end="url(#ah2)"/>
+          <line x1="300" y1="216" x2="440" y2="156" stroke="var(--faint)" marker-end="url(#ah2)"/>
+          <circle cx="458" cy="150" r="9" fill="var(--static)"/>
+          <text x="420" y="190" font-family="DM Mono, monospace" font-size="12" fill="var(--muted)">one vector</text>
+
+          <text x="640" y="28" font-family="DM Mono, monospace" font-size="11" fill="var(--muted)" letter-spacing="1.2">CONTEXTUAL (BERT)</text>
+          <rect x="620" y="50" width="320" height="230" rx="8" fill="none" stroke="var(--rule)"/>
+          <circle cx="700" cy="96" r="7" fill="var(--accent)"/><text x="714" y="100" font-size="12">blood culture</text>
+          <circle cx="730" cy="128" r="7" fill="var(--accent)"/><text x="744" y="132" font-size="12">viral culture</text>
+          <circle cx="880" cy="240" r="7" fill="var(--warm)"/><text x="760" y="244" font-size="12">safety culture</text>
+          <text x="640" y="200" font-size="12" fill="var(--muted)">each use gets its</text>
+          <text x="640" y="216" font-size="12" fill="var(--muted)">own vector</text>
+        </g>
+      </svg>
+      </div>
+      <figcaption>Illustrative example. A static model collapses all senses of “culture” into one point. A contextual model like BERT produces a separate vector for every occurrence, shaped by the surrounding words.</figcaption>
+    </figure>
+    <p class="lede">Contextual vectors are richer, but discovery-by-ranking needs a single point per concept. This study’s method averages many contextual vectors back into one: a <em class="key">static-equivalent</em> embedding.</p>
+  </div>
+  <aside class="speaker">This is the central conceptual slide. Polysemy is everywhere in medicine: culture, positive, discharge, resistance. A static vector is a frequency-weighted blur of senses. A contextual vector is sharp but tied to one sentence. The averaging trick (Bommasani 2020) is meant to keep the quality of contextual vectors while recovering a single, rankable point.</aside>
+</section>
+
+<!-- 8 TRANSFORMER: architecture -->
+<section class="slide" id="transformer" data-section="03 · Transformer architecture">
+  <div class="slide-inner">
+    <div class="eyebrow">03 · Transformer architecture</div>
+    <h2>BERT is a stack of 12 transformer encoder layers</h2>
+    <div class="cols c2" style="align-items:center">
+      <figure>
+        <div class="figwrap">
+        <svg viewBox="0 0 440 420" role="img" aria-label="BERT-base: tokens are embedded with position information at layer 0, then pass through 12 encoder layers, each made of multi-head self-attention and a feed-forward network. Every layer outputs one 768-dimensional vector per token, giving 13 hidden states.">
+          <defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+          <g font-family="DM Mono, monospace" font-size="12">
+            <!-- tokens -->
+            <g fill="var(--ink)">
+              <rect x="20" y="380" width="62" height="26" rx="4" fill="var(--surface)" stroke="var(--rule)"/><text x="51" y="397" text-anchor="middle">[CLS]</text>
+              <rect x="90" y="380" width="62" height="26" rx="4" fill="var(--surface)" stroke="var(--rule)"/><text x="121" y="397" text-anchor="middle">ace2</text>
+              <rect x="160" y="380" width="72" height="26" rx="4" fill="var(--surface)" stroke="var(--accent)"/><text x="196" y="397" text-anchor="middle" fill="var(--accent)">binds</text>
+              <rect x="240" y="380" width="62" height="26" rx="4" fill="var(--surface)" stroke="var(--rule)"/><text x="271" y="397" text-anchor="middle">spike</text>
+              <rect x="310" y="380" width="62" height="26" rx="4" fill="var(--surface)" stroke="var(--rule)"/><text x="341" y="397" text-anchor="middle">[SEP]</text>
+            </g>
+            <line x1="196" y1="378" x2="196" y2="352" stroke="var(--muted)" marker-end="url(#ah3)"/>
+            <!-- layer 0 -->
+            <rect x="20" y="318" width="352" height="32" rx="5" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="32" y="338" fill="var(--ink)">L0  token + position embeddings</text>
+            <!-- encoder block -->
+            <rect x="20" y="70" width="352" height="234" rx="6" fill="none" stroke="var(--ink)" stroke-dasharray="5 4"/>
+            <text x="32" y="92" fill="var(--muted)">× 12 encoder layers (L1 … L12)</text>
+            <rect x="44" y="200" width="304" height="40" rx="5" fill="var(--surface)" stroke="var(--rule)"/>
+            <text x="196" y="225" text-anchor="middle" fill="var(--ink)">multi-head self-attention</text>
+            <rect x="44" y="128" width="304" height="40" rx="5" fill="var(--surface)" stroke="var(--rule)"/>
+            <text x="196" y="153" text-anchor="middle" fill="var(--ink)">feed-forward network</text>
+            <text x="196" y="190" text-anchor="middle" fill="var(--muted)" font-size="11">+ residual · layer norm</text>
+            <text x="196" y="262" text-anchor="middle" fill="var(--muted)" font-size="11">+ residual · layer norm</text>
+            <line x1="196" y1="316" x2="196" y2="242" stroke="var(--muted)" marker-end="url(#ah3)"/>
+            <line x1="196" y1="198" x2="196" y2="170" stroke="var(--muted)" marker-end="url(#ah3)"/>
+            <line x1="196" y1="126" x2="196" y2="38" stroke="var(--muted)" marker-end="url(#ah3)"/>
+            <text x="206" y="30" fill="var(--accent)">768-d vector for “binds”</text>
+            <!-- tap -->
+            <line x1="372" y1="334" x2="408" y2="334" stroke="var(--accent)"/>
+            <line x1="372" y1="110" x2="408" y2="110" stroke="var(--accent)"/>
+            <line x1="408" y1="110" x2="408" y2="334" stroke="var(--accent)" stroke-width="2"/>
+            <text x="420" y="214" fill="var(--accent)" transform="rotate(90 420 214)" text-anchor="middle">13 hidden states read out</text>
+          </g>
+        </svg>
+        </div>
+        <figcaption>BERT-base. Every layer emits one 768-d vector per token. Layer 0 is the input embedding; layers 1–12 are progressively more contextual. The study extracts all 13.</figcaption>
+      </figure>
+      <ul class="clean">
+        <li><b>Encoder only, bidirectional.</b> Every token sees every other token in the sequence, left and right.</li>
+        <li><b>Pre-trained by masked language modelling.</b> 15% of tokens are hidden and the model learns to predict them from context, plus a next-sentence objective.</li>
+        <li><b>Each layer rewrites every token’s vector</b> using information gathered from the rest of the sentence.</li>
+        <li><b>Layers specialise.</b> Lower layers tend to hold surface and lexical information, higher layers more contextual and task-shaped information. Which layer works best for word meaning is an empirical question, and it matters in the results.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="speaker">Walk bottom to top. Tokens become vectors at layer 0, then 12 identical blocks of attention plus feed-forward refine them. The key practical point for this study: you can read a token's vector out of any of the 13 layers, and they behave differently. Plant that seed now because the results depend on it.</aside>
+</section>
+
+<!-- 9 TRANSFORMER: attention -->
+<section class="slide" data-section="03 · Transformer architecture">
+  <div class="slide-inner">
+    <div class="eyebrow">03 · Transformer architecture <span class="sec">/ self-attention</span></div>
+    <h2>Self-attention lets each word pull in meaning from its neighbours</h2>
+    <div class="cols c2">
+      <div class="block" style="gap:16px">
+        <div class="formula">Attention(Q, K, V) = softmax( Q·Kᵀ / √dₖ ) · V</div>
+        <ul class="clean">
+          <li>Each token emits a <b>query</b> (what am I looking for), a <b>key</b> (what do I offer) and a <b>value</b> (what I pass on).</li>
+          <li>Query–key dot products decide how much each token borrows from every other token.</li>
+          <li>BERT-base runs 12 attention heads in parallel per layer, each free to track a different relation.</li>
+        </ul>
+      </div>
+      <div class="block" style="gap:16px">
+        <div class="panel block">
+          <h3>Why this matters for the study</h3>
+          <p><b>Cost is quadratic in sequence length.</b> A sequence of n tokens builds an n × n attention matrix, so short inputs are much cheaper.</p>
+          <p><b>Hard limit of 512 tokens.</b> Long sentences from full-text articles can exceed it and must be discarded or split.</p>
+          <p><b>Context dilution.</b> In a long sentence the word of interest attends to many loosely related tokens. The pilot study tested whether this hurts.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker">Keep the math light: the formula is there for the technical audience. The practical consequences are what matter: quadratic cost, the 512 cap, and the idea that short, focused contexts may give cleaner word vectors. That motivates the short-sequence design choice in the methodology.</aside>
+</section>
+
+<!-- 10 TRANSFORMER: tokenization + variants -->
+<section class="slide" data-section="03 · Transformer architecture">
+  <div class="slide-inner">
+    <div class="eyebrow">03 · Transformer architecture <span class="sec">/ vocabulary &amp; variants</span></div>
+    <h2>A fixed vocabulary means biomedical terms get split into pieces</h2>
+    <div class="panel block" style="gap:10px">
+      <span class="small mono">Illustrative sub-word split · the exact pieces depend on each model’s vocabulary</span>
+      <div>
+        <span class="tok hit">fever</span> → <span class="tok hit">fever</span>
+        <span class="small">&nbsp; one native token, one vector</span>
+      </div>
+      <div>
+        <span class="tok hit">remdesivir</span> → <span class="tok sub">rem</span><span class="tok sub">##des</span><span class="tok sub">##ivi</span><span class="tok sub">##r</span>
+        <span class="small">&nbsp; k pieces, k vectors that must be pooled</span>
+      </div>
+    </div>
+    <div class="cols c2">
+      <div class="block">
+        <h3><span class="mono" style="color:var(--bio)">●</span> BioBERT v1.1</h3>
+        <p>Original BERT weights and <b>original general-English vocabulary</b>, further pre-trained on PubMed abstracts and PubMed Central full text. WordPiece tokenizer.</p>
+      </div>
+      <div class="block">
+        <h3><span class="mono" style="color:var(--sci)">●</span> SciBERT (scivocab, uncased)</h3>
+        <p>Trained on about 1.14 million Semantic Scholar papers, roughly 82% biomedical and 18% computer science, with its <b>own scientific vocabulary</b> built from that corpus.</p>
+      </div>
+    </div>
+    <p class="small">Both used off the shelf from HuggingFace, with no further pre-training or fine-tuning, based on the pilot study.</p>
+  </div>
+  <aside class="speaker">Sub-word decomposition is the third obstacle from the rationale. BioBERT kept the general vocabulary, so many biomedical words are split; SciBERT built a scientific vocabulary, so more terms are native. That difference reappears in the results. The remdesivir split is illustrative, not an actual tokenizer output.</aside>
+</section>
+
+<!-- 11 METHOD: corpus -->
+<section class="slide" id="method" data-section="04 · Methodology">
+  <div class="slide-inner">
+    <div class="eyebrow">04 · Methodology <span class="sec">/ data</span></div>
+    <h2>Corpus: CORD-19, the COVID-19 Open Research Dataset</h2>
+    <div class="stats">
+      <div class="stat"><b>500k+</b><span>scholarly articles and abstracts</span></div>
+      <div class="stat"><b>200k+</b><span>full-text articles and preprints</span></div>
+      <div class="stat"><b>1</b><span>aggregated text file after removing metadata</span></div>
+    </div>
+    <div class="cols c2">
+      <div class="block">
+        <h3>Pre-processing for all models</h3>
+        <ul class="clean">
+          <li>Every number replaced with a special token.</li>
+          <li>Selective lowercasing, so abbreviations such as ACE2 survive.</li>
+        </ul>
+      </div>
+      <div class="block">
+        <h3>Extra step for Word2Vec and GloVe</h3>
+        <ul class="clean">
+          <li>Common terms (stop words) and punctuation removed, as is standard for static training.</li>
+          <li>BERT keeps natural text, because its context depends on function words too.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker">CORD-19 was released by the Allen Institute and partners in 2020. It is big, domain-specific and messy, which makes it a realistic test bed for literature mining. Same corpus for everything except BioWordVec, which was pre-trained elsewhere.</aside>
+</section>
+
+<!-- 12 METHOD: pipeline -->
+<section class="slide" data-section="04 · Methodology">
+  <div class="slide-inner">
+    <div class="eyebrow">04 · Methodology <span class="sec">/ distilling BERT</span></div>
+    <h2>From many contextual vectors to one static-equivalent vector</h2>
+    <figure>
+      <div class="figwrap">
+      <svg viewBox="0 0 1000 220" role="img" aria-label="Pipeline: sample n sentences containing the word, tokenize, encode with BERT and read all 13 layers, mean-pool sub-word pieces within each sentence, then mean over the n sentences to get one 768-dimensional vector per word per layer.">
+        <defs><marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker></defs>
+        <g font-family="Figtree, sans-serif" font-size="13" fill="var(--ink)">
+          <g>
+            <rect x="10" y="40" width="170" height="110" rx="8" fill="var(--surface)" stroke="var(--rule)"/>
+            <text x="24" y="66" font-weight="600">1 · Sample</text>
+            <text x="24" y="90" fill="var(--muted)" font-size="12">n = 500, 1,000 or 5,000</text>
+            <text x="24" y="108" fill="var(--muted)" font-size="12">short sequences, each with</text>
+            <text x="24" y="126" fill="var(--muted)" font-size="12">one instance of the word</text>
+          </g>
+          <line x1="182" y1="95" x2="208" y2="95" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah4)"/>
+          <g>
+            <rect x="212" y="40" width="170" height="110" rx="8" fill="var(--surface)" stroke="var(--rule)"/>
+            <text x="226" y="66" font-weight="600">2 · Tokenize</text>
+            <text x="226" y="90" fill="var(--muted)" font-size="12">word → 1 token, or</text>
+            <text x="226" y="108" fill="var(--muted)" font-size="12">k sub-word tokens</text>
+            <text x="226" y="126" fill="var(--muted)" font-size="12">drop if length &gt; 512</text>
+          </g>
+          <line x1="384" y1="95" x2="410" y2="95" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah4)"/>
+          <g>
+            <rect x="414" y="40" width="170" height="110" rx="8" fill="var(--surface)" stroke="var(--rule)"/>
+            <text x="428" y="66" font-weight="600">3 · Encode</text>
+            <text x="428" y="90" fill="var(--muted)" font-size="12">BioBERT or SciBERT</text>
+            <text x="428" y="108" fill="var(--muted)" font-size="12">read hidden states from</text>
+            <text x="428" y="126" fill="var(--muted)" font-size="12">all 13 layers</text>
+          </g>
+          <line x1="586" y1="95" x2="612" y2="95" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah4)"/>
+          <g>
+            <rect x="616" y="40" width="170" height="110" rx="8" fill="var(--surface)" stroke="var(--rule)"/>
+            <text x="630" y="66" font-weight="600">4 · Pool sub-words</text>
+            <text x="630" y="90" fill="var(--muted)" font-size="12">mean of k piece vectors</text>
+            <text x="630" y="108" fill="var(--muted)" font-size="12">→ one 1×768 vector</text>
+            <text x="630" y="126" fill="var(--muted)" font-size="12">per sentence</text>
+          </g>
+          <line x1="788" y1="95" x2="814" y2="95" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah4)"/>
+          <g>
+            <rect x="818" y="40" width="172" height="110" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="832" y="66" font-weight="600">5 · Aggregate</text>
+            <text x="832" y="90" fill="var(--muted)" font-size="12">mean over n sentences</text>
+            <text x="832" y="108" fill="var(--muted)" font-size="12">→ one static-equivalent</text>
+            <text x="832" y="126" fill="var(--muted)" font-size="12">vector per word, per layer</text>
+          </g>
+          <text x="10" y="190" font-family="DM Mono, monospace" font-size="12" fill="var(--muted)">If fewer than n qualifying sentences exist, all available ones are used.</text>
+        </g>
+      </svg>
+      </div>
+    </figure>
+    <div class="formula">w_c = mean( w_c¹ … w_cᵏ )          sub-word pooling within one context c
+w   = mean( w_c1 … w_cn )          aggregation over n contexts (or all available if fewer)</div>
+    <p class="small">Mean pooling at both steps follows Bommasani et al. (2020), who found it beat max, min and last-token pooling. Unlike Bommasani, a word with too few contexts uses all of them rather than falling back to the word in isolation, which BERT represents poorly.</p>
+  </div>
+  <aside class="speaker">This is the core method. Two averages: across sub-word pieces within a sentence, then across sentences. The result is a 768-d vector per word, per layer, per model, per n. That is a grid of configurations which the results section sweeps through. Point out the deviation from Bommasani: no isolated-word fallback.</aside>
+</section>
+
+<!-- 13 METHOD: pilot + baselines -->
+<section class="slide" data-section="04 · Methodology">
+  <div class="slide-inner">
+    <div class="eyebrow">04 · Methodology <span class="sec">/ design choices &amp; baselines</span></div>
+    <h2>A pilot settled the input format; four static models set the bar</h2>
+    <div class="cols c2">
+      <div class="panel block">
+        <span class="small mono">Pilot study</span>
+        <h3>Short sequences beat long ones</h3>
+        <p><b>Long:</b> corpus text split on full stops, i.e. whole sentences.</p>
+        <p><b>Short:</b> sentences further split on commas into phrases.</p>
+        <p>Long sequences benchmarked worse and often exceeded BERT’s 512-token limit, so the main study used <b>short sequences only</b>. The pilot also found no benefit from extra pre-training.</p>
+      </div>
+      <div class="block">
+        <div class="tablewrap">
+        <table class="data">
+          <thead><tr><th>Static baseline</th><th>Dims</th><th>Trained on</th></tr></thead>
+          <tbody>
+            <tr><td>Word2Vec skip-gram</td><td>200</td><td>CORD-19</td></tr>
+            <tr><td>Word2Vec skip-gram</td><td>300</td><td>CORD-19</td></tr>
+            <tr><td>GloVe</td><td>300</td><td>CORD-19</td></tr>
+            <tr><td>BioWordVec</td><td>200</td><td>27M+ articles</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="small mono">Word2Vec: window 8 · lr 0.01 · downsample 1e-4 · 15 negative samples · min count 10 · 10 epochs</p>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker">Two quick points. The pilot is why we only see short sequences in the results. And the baselines are fair: Word2Vec and GloVe were trained on exactly the same corpus, with sensible hyperparameters, and BioWordVec represents a large, well-resourced biomedical static model.</aside>
+</section>
+
+<!-- 14 METHOD: benchmarks -->
+<section class="slide" data-section="04 · Methodology">
+  <div class="slide-inner">
+    <div class="eyebrow">04 · Methodology <span class="sec">/ evaluation</span></div>
+    <h2>How do you score “captures meaning” without running a lab experiment?</h2>
+    <p class="lede">Validating each predicted relationship needs domain experiments. Intrinsic benchmarks are the surrogate: vectors that agree with expert similarity judgements should encode reality more faithfully, so their predictions deserve more confidence.</p>
+    <div class="cols">
+      <div class="block"><h3>Bio-SimVerb</h3><p><b class="mono">988</b> biomedical verb pairs rated by domain experts.</p></div>
+      <div class="block"><h3>Bio-SimLex</h3><p><b class="mono">1,000</b> biomedical noun pairs, drawn from 14 ontologies and 14,000+ journals across 120+ areas.</p></div>
+      <div class="block"><h3>Score</h3><p>Cosine similarity of each pair, then <b>Spearman’s ρ</b> against the expert ratings. Higher ρ means better agreement.</p></div>
+    </div>
+    <p class="small">Chosen over older sets such as MayoSRS and UMNSRS, which test only nouns and do not separate similarity from relatedness (Chiu et al., 2018).</p>
+  </div>
+  <aside class="speaker">Be upfront that this is a surrogate. Tshitoyan and Venkatakrishnan validated with physics and biology; that is not feasible for a methods comparison across many configurations. The logic: if embeddings rank word pairs the way experts do, their nearest-neighbour lists are more trustworthy. Spearman because only the ordering matters.</aside>
+</section>
+
+<!-- 15 RESULTS: headline -->
+<section class="slide" id="results" data-section="05 · Results">
+  <div class="slide-inner">
+    <div class="eyebrow">05 · Results <span class="sec">/ best layer per model</span></div>
+    <h2>BioBERT wins on verbs, SciBERT wins on nouns. Neither wins both.</h2>
+    <div class="legend"><span><i style="background:var(--bio)"></i>BioBERT</span><span><i style="background:var(--sci)"></i>SciBERT</span><span><i style="background:var(--static)"></i>Static baselines</span><span>dashed line = best static model (Word2Vec 300)</span></div>
+    <div class="cols c2">
+      <figure><div class="figwrap" id="chart-verbs"></div><figcaption>Bio-SimVerb (verbs). BioBERT layer 8 beats every static model; SciBERT’s best layer (11) does not.</figcaption></figure>
+      <figure><div class="figwrap" id="chart-nouns"></div><figcaption>Bio-SimLex (nouns). SciBERT layer 3 beats every static model; BioBERT’s best layer (6) does not.</figcaption></figure>
+    </div>
+    <p class="small">Spearman’s ρ, n = 500 aggregated contexts, best-performing layer in brackets. Source: Table 1.</p>
+  </div>
+  <aside class="speaker">The headline. Verbs: BioBERT 0.552 versus Word2Vec-300 at 0.526. Nouns: SciBERT 0.751 versus 0.734. GloVe is weakest on nouns at 0.625. BioWordVec, despite 27M training articles, sits below Word2Vec trained on CORD-19 alone, which suggests corpus match matters. The crossover between BioBERT and SciBERT is the most interesting result and I'll come back to why.</aside>
+</section>
+
+<!-- 16 RESULTS: n -->
+<section class="slide" data-section="05 · Results">
+  <div class="slide-inner">
+    <div class="eyebrow">05 · Results <span class="sec">/ number of contexts</span></div>
+    <h2>500 sentences per word is as good as 5,000</h2>
+    <div class="cols c2" style="align-items:center">
+      <div class="tablewrap">
+        <table class="data">
+          <thead><tr><th>Model · n</th><th>Bio-SimVerb ρ</th><th>Bio-SimLex ρ</th></tr></thead>
+          <tbody>
+            <tr><td>BioBERT · 500</td><td>0.5516</td><td>0.7105</td></tr>
+            <tr><td>BioBERT · 1,000</td><td class="best">0.5526</td><td>0.7103</td></tr>
+            <tr><td>BioBERT · 5,000</td><td>0.5513</td><td>0.7114</td></tr>
+            <tr><td>SciBERT · 500</td><td>0.5142</td><td class="best">0.7514</td></tr>
+            <tr><td>SciBERT · 1,000</td><td>0.5149</td><td>0.7509</td></tr>
+            <tr><td>SciBERT · 5,000</td><td>0.5144</td><td>0.7513</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="block" style="gap:18px">
+        <div class="stat"><b>≤ 0.0013</b><span>largest change in ρ from 500 to 5,000 contexts, for any model and benchmark</span></div>
+        <div class="stat"><b>10×</b><span>less BERT inference at n = 500 than at n = 5,000, for the same quality</span></div>
+        <p>The mean converges quickly. A few hundred sentences already pin down a word’s typical meaning in the corpus.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker">This is the efficiency result. Going from 500 to 5,000 contexts changes rho in the third or fourth decimal place. So you only need to sample a few hundred sentences per word and run inference, instead of training a model on the whole corpus. That is the practical payoff for discovery pipelines on new or fast-moving corpora.</aside>
+</section>
+
+<!-- 17 RESULTS: layers -->
+<section class="slide" data-section="05 · Results">
+  <div class="slide-inner">
+    <div class="eyebrow">05 · Results <span class="sec">/ which layer</span></div>
+    <h2>The best layer depends on the model and the part of speech</h2>
+    <figure><div class="figwrap" id="chart-layers"></div>
+      <figcaption>Peak-performing layer for each model and benchmark (Table 1), plus the peak for words native to each model’s vocabulary (Table 2). Layer 0 is the input embedding.</figcaption>
+    </figure>
+    <div class="cols">
+      <div class="block"><h3>Verbs peak late</h3><p>Both models climb towards later layers. BioBERT verb vectors beat every static model from <b>layer 6 onwards</b>.</p></div>
+      <div class="block"><h3>Nouns peak early</h3><p>Noun performance is highest in earlier layers, especially for SciBERT (layer 3).</p></div>
+      <div class="block"><h3>Curves differ in shape</h3><p>BioBERT and SciBERT trace different layer-wise curves, so a layer choice does not transfer between models.</p></div>
+    </div>
+  </div>
+  <aside class="speaker">A practical warning for anyone extracting BERT vectors: there is no universal best layer, and the last layer is not automatically right. Verbs seem to need more contextual processing, nouns less. The paper's Figure 3 shows the full curves; this slide shows where they peak.</aside>
+</section>
+
+<!-- 18 RESULTS: subwords -->
+<section class="slide" data-section="05 · Results">
+  <div class="slide-inner">
+    <div class="eyebrow">05 · Results <span class="sec">/ sub-word pooling</span></div>
+    <h2>Whether a word is split into pieces changes everything</h2>
+    <div class="legend"><span><i style="background:var(--accent)"></i>single token (native word)</span><span><i style="background:var(--warm)"></i>multi-token (sub-word pooled)</span></div>
+    <div class="cols c2">
+      <figure><div class="figwrap" id="chart-sub-verbs"></div><figcaption>Verbs: native words score far higher, peaking at layer 1. Only native BioBERT verbs beat the static model’s best.</figcaption></figure>
+      <figure><div class="figwrap" id="chart-sub-nouns"></div><figcaption>Nouns: the reverse. Pooled nouns score higher; pooled SciBERT nouns beat everything.</figcaption></figure>
+    </div>
+    <p class="small">Test pairs split by whether both words are native to the model’s vocabulary (single token) or at least one needs sub-word pooling (k &gt; 1). n = 500, best layer per group. Word2Vec 300 shown on the same pair splits for reference. Source: Table 2.</p>
+  </div>
+  <aside class="speaker">Native verbs reach about 0.67 rho at layer 1, far above anything in the headline chart, which tells us the overall verb score is dragged down by split words. For nouns the pattern flips: pooled nouns peak around layer 6 for BioBERT and layer 3 for SciBERT and do better than native nouns. Interpret carefully: the split criterion is coarse, and the word sets differ between groups, which also shifts the static baseline.</aside>
+</section>
+
+<!-- 19 CONCLUSIONS: findings -->
+<section class="slide" id="conclusions" data-section="06 · Conclusions">
+  <div class="slide-inner">
+    <div class="eyebrow">06 · Conclusions</div>
+    <h2>What the study shows</h2>
+    <ol class="steps">
+      <li><div><b>Contextual models can be distilled for discovery.</b> Static-equivalent BERT embeddings beat Word2Vec, GloVe and BioWordVec, on verbs (BioBERT) and nouns (SciBERT).</div></li>
+      <li><div><b>Model choice must follow the target words.</b> No single variant won both benchmarks. Pre-training corpus and vocabulary both appear to matter.</div></li>
+      <li><div><b>It is cheap.</b> 500 sampled sentences per word match 5,000. No corpus-wide training run is needed, only inference on a sample.</div></li>
+      <li><div><b>Short contexts work better</b> than whole sentences, and are cheaper under quadratic attention.</div></li>
+      <li><div><b>Layer and tokenization are first-class settings.</b> Verbs peak late, nouns early, and native versus split words behave very differently.</div></li>
+    </ol>
+  </div>
+  <aside class="speaker">Summarise in plain terms. The hypothesis from Tshitoyan and Venkatakrishnan holds, with a caveat: you have to pick the BERT variant, layer and handling of sub-words for the kind of word you're mining.</aside>
+</section>
+
+<!-- 20 CONCLUSIONS: framework -->
+<section class="slide" data-section="06 · Conclusions">
+  <div class="slide-inner">
+    <div class="eyebrow">06 · Conclusions <span class="sec">/ proposed framework</span></div>
+    <h2>A recipe for BERT-based knowledge discovery</h2>
+    <ol class="steps">
+      <li><div><b>Build the vocabulary</b> of words to mine, with a custom function or any open-source NLP toolkit.</div></li>
+      <li><div><b>Sample n sentences per word at random</b>, as few as 500. Prefer short sequences, around 26 words on average.</div></li>
+      <li><div><b>Tokenize and encode</b> with a domain BERT chosen for the word type: BioBERT for verbs, SciBERT for nouns, and consider vocabulary coverage.</div></li>
+      <li><div><b>Extract one layer</b> chosen for the word type, and isolate the 1×768 vector for the target word, mean-pooling sub-words.</div></li>
+      <li><div><b>Average the n vectors</b> into one static-equivalent embedding per word.</div></li>
+      <li><div><b>Mine it like Word2Vec:</b> cosine ranking against a query concept, nearest-neighbour lists, clustering.</div></li>
+    </ol>
+  </div>
+  <aside class="speaker">This is the actionable takeaway from the paper. Each step is embarrassingly parallel. Steps 3 and 4 are where the results feed back in. Step 6 is unchanged from the static workflow, so existing discovery tooling still works.</aside>
+</section>
+
+<!-- 21 CONCLUSIONS: limits -->
+<section class="slide" data-section="06 · Conclusions">
+  <div class="slide-inner">
+    <div class="eyebrow">06 · Conclusions <span class="sec">/ limitations &amp; open questions</span></div>
+    <h2>What still needs work</h2>
+    <div class="cols c2">
+      <ul class="clean">
+        <li><b>Coarse sub-word split.</b> “At least one word has k &gt; 1 pieces” lumps together 2-piece and 6-piece words. The effect of k needs quantifying.</li>
+        <li><b>Pooling choice.</b> Mean pooling was best in general-domain tests, but Ács et al. (2021) found the best sub-word pooling depends on the task.</li>
+        <li><b>Benchmarks are a surrogate.</b> Agreement with expert similarity ratings is not the same as a validated discovery.</li>
+      </ul>
+      <ul class="clean">
+        <li><b>Why the crossover?</b> BioBERT keeps the general BERT vocabulary; SciBERT has a scientific one. Sub-word quality may also need more pre-training steps.</li>
+        <li><b>General-domain pairs.</b> The benchmarks include general-English pairs, which may favour SciBERT’s mixed CS/biomedical pre-training.</li>
+        <li><b>Layer behaviour</b> differs for native and split words in both models and is not yet explained.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="speaker">Be candid here; it makes the talk stronger. The most important limitation is the surrogate evaluation. The obvious next study is to rerun a Tshitoyan-style prediction with these embeddings and validate the predictions in the domain.</aside>
+</section>
+
+<!-- 22 CONCLUSIONS: uses -->
+<section class="slide" data-section="06 · Conclusions">
+  <div class="slide-inner">
+    <div class="eyebrow">06 · Conclusions <span class="sec">/ potential uses</span></div>
+    <h2>Where static-equivalent BERT embeddings could be put to work</h2>
+    <div class="cols">
+      <div class="block"><h3>Drug repurposing leads</h3><p>Rank compound names by similarity to a target, pathway or disease term, as in the hydroxychloroquine neighbourhood, to shortlist candidates for review.</p></div>
+      <div class="block"><h3>Literature-based discovery</h3><p>Surface indirect links between concepts that never co-occur, the way thermoelectric materials and ACE2 reservoirs were found.</p></div>
+      <div class="block"><h3>Rapid response to new corpora</h3><p>Because only inference on a sample is needed, an emerging outbreak literature can be mined in days without training a new model.</p></div>
+      <div class="block"><h3>Ontology and terminology work</h3><p>Suggest synonyms, cluster related terms and propose candidate mappings between free-text mentions and ontology concepts.</p></div>
+      <div class="block"><h3>Exploring a field’s structure</h3><p>Cluster and map concepts, for example the psychiatric terms such as anxiety and depression that sit near “coronavirus” and “symptoms” in CORD-19.</p></div>
+      <div class="block"><h3>Features for downstream models</h3><p>Use the vectors as drop-in replacements for Word2Vec features in existing classifiers and retrieval systems.</p></div>
+    </div>
+  </div>
+  <aside class="speaker">Close on applications. The common thread: anywhere a Word2Vec vector was used, a distilled BERT vector can be swapped in, and it can be produced for a new corpus quickly. The psychiatric example comes from the paper's Figure 2. Mention that newer work has extended static-equivalent methods (Gupta and Jaggi 2021, Phrase-BERT, hybrid static/contextual embeddings).</aside>
+</section>
+
+<!-- 23 END -->
+<section class="slide title-slide" data-section="Close">
+  <div class="slide-inner">
+    <div class="eyebrow">Thank you · Questions</div>
+    <h1>A few hundred sentences and an off-the-shelf BERT can beat a model trained on the whole corpus.</h1>
+    <p class="lede">The catch: choose the model, layer and sub-word handling for the words you want to mine.</p>
+    <div class="cols" style="gap:24px">
+      <div class="block">
+        <span class="small mono">Paper</span>
+        <p><a href="https://doi.org/10.21203/rs.3.rs-2286334/v1" style="color:var(--accent)">doi.org/10.21203/rs.3.rs-2286334/v1</a></p>
+      </div>
+      <div class="block">
+        <span class="small mono">Models &amp; data</span>
+        <p class="small">CORD-19 · dmis-lab/biobert-v1.1 · allenai/scibert_scivocab_uncased · BioWordVec</p>
+      </div>
+      <div class="block">
+        <span class="small mono">Key references</span>
+        <p class="small">Tshitoyan et al. 2019 · Venkatakrishnan et al. 2020 · Bommasani et al. 2020 · Devlin et al. 2018 · Chiu et al. 2018</p>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker">Restate the one-line takeaway and open for questions. Likely questions: How does this compare with modern LLM embeddings? Why not fine-tune? How would you validate discoveries? Why mean pooling?</aside>
+</section>
+
+</main>
+
+<div class="notes" id="notes" hidden>
+  <div class="nh"><span>Speaker notes</span><span id="notes-time"></span></div>
+  <p id="notes-text"></p>
+</div>
+
+<nav class="bar" aria-label="Slide controls">
+  <a class="home" href="projects.html">&larr; projects</a>
+  <button id="prev" aria-label="Previous slide">←</button>
+  <span class="count" id="count">1 / 1</span>
+  <button id="next" aria-label="Next slide">→</button>
+  <span class="sec" id="secname"></span>
+  <span class="hint">← → to move · N notes</span>
+  <button id="notesbtn" aria-pressed="false">Notes</button>
+</nav>
+
+<script>
+(function(){
+  document.querySelectorAll('.slide:not(.title-slide)').forEach(sl=>{
+    const inner=sl.querySelector('.slide-inner');
+    const head=document.createElement('header');head.className='head';
+    const body=document.createElement('div');body.className='body';
+    [...inner.children].forEach(c=>{(c.matches('.eyebrow,h2')?head:body).appendChild(c);});
+    inner.append(head,body);
+    if(sl.querySelector('figure')||sl.querySelector('.stats'))sl.classList.add('wide');
+  });
+  const NS='http://www.w3.org/2000/svg';
+  function el(tag,attrs,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;return e;}
+
+  // Cleveland dot plot: rows [{label, value, color, note}]
+  function dotPlot(id,{domain,rows,ref,ticks}){
+    const W=520,rowH=34,top=12,left=150,right=70,H=top+rows.length*rowH+34;
+    const x=v=>left+(v-domain[0])/(domain[1]-domain[0])*(W-left-right);
+    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img'});
+    svg.setAttribute('aria-label',rows.map(r=>`${r.label} ${r.value.toFixed(3)}`).join('; '));
+    const g=el('g',{'font-family':'Figtree, sans-serif','font-size':'13'});
+    const axisY=top+rows.length*rowH+4;
+    ticks.forEach(t=>{
+      g.appendChild(el('line',{x1:x(t),x2:x(t),y1:top-4,y2:axisY,stroke:'var(--rule)','stroke-width':1}));
+      g.appendChild(el('text',{x:x(t),y:axisY+18,'text-anchor':'middle',fill:'var(--muted)','font-family':'DM Mono, monospace','font-size':'11'},t.toFixed(2)));
+    });
+    if(ref!=null){
+      g.appendChild(el('line',{x1:x(ref),x2:x(ref),y1:top-4,y2:axisY,stroke:'var(--muted)','stroke-width':1.5,'stroke-dasharray':'4 4'}));
+    }
+    rows.forEach((r,i)=>{
+      const cy=top+i*rowH+rowH/2;
+      g.appendChild(el('line',{x1:left,x2:x(r.value),y1:cy,y2:cy,stroke:'var(--rule)','stroke-width':1}));
+      g.appendChild(el('text',{x:left-10,y:cy+4,'text-anchor':'end',fill:'var(--ink)','font-weight':r.bold?600:400},r.label));
+      const c=el('circle',{cx:x(r.value),cy,r:r.bold?7:5.5,fill:r.color,stroke:'var(--bg)','stroke-width':2});
+      c.appendChild(el('title',{},`${r.label}: ρ = ${r.value.toFixed(4)}${r.note?' · '+r.note:''}`));
+      g.appendChild(c);
+      g.appendChild(el('text',{x:W-right+14,y:cy+4,fill:r.bold?'var(--ink)':'var(--muted)','font-family':'DM Mono, monospace','font-size':'12','font-weight':r.bold?600:400},r.value.toFixed(3)));
+    });
+    g.appendChild(el('text',{x:W-right+14,y:axisY+18,fill:'var(--muted)','font-family':'DM Mono, monospace','font-size':'11'},'ρ'));
+    svg.appendChild(g);
+    document.getElementById(id).appendChild(svg);
+  }
+
+  const B='var(--bio)',S='var(--sci)',G='var(--static)';
+    dotPlot('chart-verbs',{domain:[0.48,0.57],ticks:[0.48,0.50,0.52,0.54,0.56],ref:0.5260,rows:[
+    {label:'BioBERT (L8)',value:0.5516,color:B,bold:true,note:'layer 8'},
+    {label:'Word2Vec 300',value:0.5260,color:G},
+    {label:'Word2Vec 200',value:0.5237,color:G},
+    {label:'SciBERT (L11)',value:0.5142,color:S,note:'layer 11'},
+    {label:'GloVe 300',value:0.5051,color:G},
+    {label:'BioWordVec 200',value:0.4923,color:G},
+  ]});
+  dotPlot('chart-nouns',{domain:[0.60,0.77],ticks:[0.60,0.64,0.68,0.72,0.76],ref:0.7341,rows:[
+    {label:'SciBERT (L3)',value:0.7514,color:S,bold:true,note:'layer 3'},
+    {label:'Word2Vec 300',value:0.7341,color:G},
+    {label:'Word2Vec 200',value:0.7310,color:G},
+    {label:'BioWordVec 200',value:0.7213,color:G},
+    {label:'BioBERT (L6)',value:0.7105,color:B,note:'layer 6'},
+    {label:'GloVe 300',value:0.6253,color:G},
+  ]});
+
+  // Dumbbell: native vs pooled
+  function dumbbell(id,{domain,rows,ticks}){
+    const W=520,rowH=44,top=12,left=120,right=60,H=top+rows.length*rowH+34;
+    const x=v=>left+(v-domain[0])/(domain[1]-domain[0])*(W-left-right);
+    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img'});
+    svg.setAttribute('aria-label',rows.map(r=>`${r.label}: single token ${r.s.toFixed(3)}, multi-token ${r.m.toFixed(3)}`).join('; '));
+    const g=el('g',{'font-family':'Figtree, sans-serif','font-size':'13'});
+    const axisY=top+rows.length*rowH+4;
+    ticks.forEach(t=>{
+      g.appendChild(el('line',{x1:x(t),x2:x(t),y1:top-4,y2:axisY,stroke:'var(--rule)'}));
+      g.appendChild(el('text',{x:x(t),y:axisY+18,'text-anchor':'middle',fill:'var(--muted)','font-family':'DM Mono, monospace','font-size':'11'},t.toFixed(2)));
+    });
+    rows.forEach((r,i)=>{
+      const cy=top+i*rowH+rowH/2;
+      g.appendChild(el('text',{x:left-10,y:cy+4,'text-anchor':'end',fill:'var(--ink)'},r.label));
+      g.appendChild(el('line',{x1:x(Math.min(r.s,r.m)),x2:x(Math.max(r.s,r.m)),y1:cy,y2:cy,stroke:'var(--faint)','stroke-width':2}));
+      [['s','var(--accent)','single token',r.sl],['m','var(--warm)','multi-token',r.ml]].forEach(([k,col,name,layer])=>{
+        const v=r[k];
+        const c=el('circle',{cx:x(v),cy,r:6.5,fill:col,stroke:'var(--bg)','stroke-width':2});
+        c.appendChild(el('title',{},`${r.label}, ${name}: ρ = ${v.toFixed(4)}${layer!=null?' (layer '+layer+')':''}`));
+        g.appendChild(c);
+        const above = (k==='s') === (r.s>r.m);
+        g.appendChild(el('text',{x:x(v),y:above?cy-11:cy+20,'text-anchor':'middle',fill:'var(--muted)','font-family':'DM Mono, monospace','font-size':'11'},v.toFixed(3)));
+      });
+    });
+    svg.appendChild(g);
+    document.getElementById(id).appendChild(svg);
+  }
+  const tk2=[0.40,0.50,0.60,0.70,0.80];
+  dumbbell('chart-sub-verbs',{domain:[0.38,0.82],ticks:tk2,rows:[
+    {label:'BioBERT',s:0.6691,m:0.4603,sl:1,ml:8},
+    {label:'SciBERT',s:0.6609,m:0.4155,sl:1,ml:9},
+    {label:'Word2Vec 300',s:0.5255,m:0.4545},
+  ]});
+  dumbbell('chart-sub-nouns',{domain:[0.38,0.82],ticks:tk2,rows:[
+    {label:'BioBERT',s:0.7255,m:0.7417,sl:1,ml:6},
+    {label:'SciBERT',s:0.7309,m:0.7743,sl:1,ml:3},
+    {label:'Word2Vec 300',s:0.6959,m:0.7341},
+  ]});
+
+  // Layer strip
+  (function(){
+    const W=900,left=170,right=30,rows=[
+      {label:'BioBERT · verbs',color:B,peak:8,band:[6,12]},
+      {label:'SciBERT · verbs',color:S,peak:11},
+      {label:'BioBERT · nouns',color:B,peak:6},
+      {label:'SciBERT · nouns',color:S,peak:3},
+      {label:'Native words (both)',color:'var(--accent)',peak:1,hollow:true},
+    ],rowH=34,top=10,H=top+rows.length*rowH+40;
+    const x=l=>left+l/12*(W-left-right);
+    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'Peak layers: BioBERT verbs layer 8, beating static models from layer 6; SciBERT verbs layer 11; BioBERT nouns layer 6; SciBERT nouns layer 3; native single-token words peak at layer 1 for both models and both benchmarks.'});
+    const g=el('g',{'font-family':'Figtree, sans-serif','font-size':'13'});
+    const axisY=top+rows.length*rowH+4;
+    for(let l=0;l<=12;l++){
+      g.appendChild(el('line',{x1:x(l),x2:x(l),y1:top-4,y2:axisY,stroke:'var(--rule)'}));
+      g.appendChild(el('text',{x:x(l),y:axisY+18,'text-anchor':'middle',fill:'var(--muted)','font-family':'DM Mono, monospace','font-size':'11'},'L'+l));
+    }
+    g.appendChild(el('text',{x:left-10,y:axisY+18,'text-anchor':'end',fill:'var(--muted)','font-family':'DM Mono, monospace','font-size':'11'},'input →'));
+    rows.forEach((r,i)=>{
+      const cy=top+i*rowH+rowH/2;
+      g.appendChild(el('text',{x:left-10,y:cy+4,'text-anchor':'end',fill:'var(--ink)'},r.label));
+      if(r.band){
+        const rect=el('rect',{x:x(r.band[0]),y:cy-8,width:x(r.band[1])-x(r.band[0]),height:16,rx:8,fill:r.color,opacity:.16});
+        rect.appendChild(el('title',{},'BioBERT verb vectors beat every static model from layer 6 onwards'));
+        g.appendChild(rect);
+      }
+      const c=el('circle',{cx:x(r.peak),cy,r:7,fill:r.hollow?'var(--bg)':r.color,stroke:r.hollow?r.color:'var(--bg)','stroke-width':r.hollow?2.5:2});
+      c.appendChild(el('title',{},`${r.label}: peak at layer ${r.peak}`));
+      g.appendChild(c);
+    });
+    svg.appendChild(g);
+    document.getElementById('chart-layers').appendChild(svg);
+  })();
+
+  // Deck navigation
+  const slides=[...document.querySelectorAll('.slide')];
+  const prog=document.getElementById('progress'),count=document.getElementById('count'),secname=document.getElementById('secname');
+  const notes=document.getElementById('notes'),notesText=document.getElementById('notes-text'),notesTime=document.getElementById('notes-time'),notesBtn=document.getElementById('notesbtn');
+  let cur=0;
+  function show(i){
+    cur=Math.max(0,Math.min(slides.length-1,i));
+    slides.forEach((s,j)=>{s.classList.toggle('active',j===cur);s.setAttribute('aria-hidden',j===cur?'false':'true');});
+    slides[cur].scrollTop=0;
+    prog.style.transform='scaleY('+((cur+1)/slides.length)+')';
+    document.body.classList.toggle('on-title',slides[cur].classList.contains('title-slide'));
+    count.textContent=(cur+1)+' / '+slides.length;
+    secname.textContent=slides[cur].dataset.section||'';
+    const a=slides[cur].querySelector('aside.speaker');
+    notesText.textContent=a?a.textContent:'';
+    notesTime.textContent='slide '+(cur+1)+' of '+slides.length;
+    const id=slides[cur].id||('s'+(cur+1));
+    try{history.replaceState(null,'','#'+id);}catch(e){}
+  }
+  function fromHash(){
+    const h=(location.hash||'').slice(1);
+    if(!h)return 0;
+    const byId=slides.findIndex(s=>s.id===h); if(byId>=0)return byId;
+    const m=h.match(/^s(\d+)$/); return m?parseInt(m[1],10)-1:0;
+  }
+  function toggleNotes(){notes.hidden=!notes.hidden;notesBtn.setAttribute('aria-pressed',String(!notes.hidden));try{localStorage.setItem('deck-notes',notes.hidden?'0':'1')}catch(e){}}
+  document.getElementById('prev').addEventListener('click',()=>show(cur-1));
+  document.getElementById('next').addEventListener('click',()=>show(cur+1));
+  notesBtn.addEventListener('click',toggleNotes);
+  document.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>{const i=slides.findIndex(s=>s.id===b.dataset.goto);if(i>=0)show(i);}));
+  document.addEventListener('keydown',e=>{
+    if(e.target.closest&&e.target.closest('input,textarea'))return;
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();show(cur+1);}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();show(cur-1);}
+    else if(e.key==='Home'){show(0);}else if(e.key==='End'){show(slides.length-1);}
+    else if(e.key==='n'||e.key==='N'){toggleNotes();}
+  });
+  let tx=null;
+  document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+  document.addEventListener('touchend',e=>{if(tx==null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60)show(cur+(dx<0?1:-1));tx=null;});
+  try{if(localStorage.getItem('deck-notes')==='1'){notes.hidden=false;notesBtn.setAttribute('aria-pressed','true');}}catch(e){}
+  show(fromHash());
+})();
+</script>
+</body>
+</html>
